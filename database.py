@@ -10,7 +10,7 @@ import os
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://fastapi_user:secret@localhost:5432/taskdb"
+    "postgresql+asyncpg://maindb_owner:npg_h97SLWEkfxzq@ep-hidden-wind-b1bptb6f-pooler.c-5.eu-central-1.aws.neon.tech/maindb?ssl=require&channel_binding=require"
 )
 
 echo_sql = os.getenv("SQL_ECHO", "true").lower() == "true"
