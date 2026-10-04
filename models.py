@@ -1,9 +1,18 @@
 from pydantic import BaseModel
+from typing import Optional
 
-class Task(BaseModel):
+class TaskCreate(BaseModel):
     title: str
     description: str = ""
 
 class TaskUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+
+class TaskOut(BaseModel):
+    id: int
+    title: str
+    description: str
+    status: str
+
+    model_config = {"from_attributes": True}

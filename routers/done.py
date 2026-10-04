@@ -1,36 +1,65 @@
-import database
-from database import done
-from fastapi import APIRouter, HTTPException
-from models import Task, TaskUpdate
+from database import get_session, Task
+from fastapi import APIRouter, HTTPException, Depends
+from models import TaskOut
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
-@router.get("/")
-async def get_done():
-    return done
 
-@router.post("/{task_id}")
-async def move_to_done(task_id: int):
-    task = next((t for t in in_work if t["id"] == task_id), None)
-    if not task:
-        raise HTTPException(
-            status_code=404, 
-            detail="Task not found. Maybe it is still in tasks? Try again"
-        )
+@router.get("/", response_model=list[TaskOut])
+async def get_done(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Task).where(Task.status == "done"))
+    return result.scalars().all()
 
-    task["status"] = "done"
-    done.append(task)
-    in_work.remove(task)
-    return task
 
-@router.delete("/{task_id}")
-async def delete_task_done(task_id: int):
-    task = next((t for t in done if t["id"] == task_id), None)
+@router.get("/{task_id}", response_model=TaskOut)
+async def get_task_done(task_id: int, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id, Task.status == "done")
+    )
+    task = result.scalar_one_or_none()
     if not task:
         raise HTTPException(
             status_code=404, 
             detail="Task not found"
         )
-    
-    done.remove(task)
     return task
+
+
+@router.post("/{task_id}", response_model=TaskOut)
+async def move_to_done(task_id: int, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Task).where(Task.id == task_id))
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(
+            status_code=404, 
+            detail="Task not found"
+        )
+
+    if task.status != "in_work":
+        raise HTTPException(
+            status_code=400,
+            detail="Task is not in 'in_work'. Only in_work tasks can be moved to done."
+        )
+
+    task.status = "done"
+    await session.commit()
+    await session.refresh(task)
+    return task
+
+
+@router.delete("/{task_id}")
+async def delete_task_done(task_id: int, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id, Task.status == "done")
+    )
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(
+            status_code=404, 
+            detail="Task not found"
+        )
+    await session.delete(task)
+    await session.commit()
+    return {"ok": True, "id": task_id}
