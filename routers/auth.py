@@ -6,9 +6,9 @@ from database import get_session, User
 from models import UserCreate, UserOut, Token
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 import os
 from jose import JWTError, jwt
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -28,7 +28,9 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    password_bytes = password.encode('utf-8')[:72]
+    password_truncated = password_bytes.decode('utf-8', errors='ignore')
+    return pwd_context.hash(password_truncated)
 
 def authenticate_user(email: str, password: str, session: AsyncSession):
     pass
