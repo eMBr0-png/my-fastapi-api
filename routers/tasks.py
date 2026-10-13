@@ -1,8 +1,9 @@
-from database import get_session, Task
+from database import get_session, Task, User
 from fastapi import APIRouter, HTTPException, Depends
 from models import TaskCreate, TaskUpdate, TaskOut
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -28,7 +29,12 @@ async def get_one_task(task_id: int, session: AsyncSession = Depends(get_session
 
 
 @router.post("/", status_code=201, response_model=TaskOut)
-async def create_task(task: TaskCreate, session: AsyncSession = Depends(get_session)):
+async def create_task(
+    task: TaskCreate,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+
     from database import Subject
     
     result = await session.execute(select(Subject).where(Subject.id == task.subject_id))
@@ -39,9 +45,9 @@ async def create_task(task: TaskCreate, session: AsyncSession = Depends(get_sess
             status_code=400,
             detail="Subject not found"
         )
-    
+
     from database import Course
-    
+
     result = await session.execute(select(Course).where(Course.id == task.course_id))
     course = result.scalar_one_or_none()
     
@@ -50,6 +56,7 @@ async def create_task(task: TaskCreate, session: AsyncSession = Depends(get_sess
             status_code=400,
             detail="Course not found"
         )
+    
     if course.subject_id != task.subject_id:
         raise HTTPException(
             status_code=400,
@@ -62,15 +69,14 @@ async def create_task(task: TaskCreate, session: AsyncSession = Depends(get_sess
             status_code=400,
             detail="This task is already saved in tasks"
         )
-    
     new_task = Task(
         title=task.title,
         description=task.description,
         subject_id=task.subject_id,
         course_id=task.course_id,
+        user_id=current_user.id,
         status="todo"
     )
-    
     session.add(new_task)
     await session.commit()
     await session.refresh(new_task)
@@ -91,10 +97,12 @@ async def edit_task(task_id: int, task_update: TaskUpdate,
 
     update_data = task_update.model_dump(exclude_unset=True)
 
+    
     if "subject_id" in update_data:
         from database import Subject
         result = await session.execute(select(Subject).where(Subject.id == update_data["subject_id"]))
         subject = result.scalar_one_or_none()
+        
         if not subject:
             raise HTTPException(
                 status_code=400,
@@ -105,7 +113,6 @@ async def edit_task(task_id: int, task_update: TaskUpdate,
         from database import Course
         result = await session.execute(select(Course).where(Course.id == update_data["course_id"]))
         course = result.scalar_one_or_none()
-        
         if not course:
             raise HTTPException(
                 status_code=400,
