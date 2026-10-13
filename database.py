@@ -79,6 +79,7 @@ class Task(Base):
     description: Mapped[str] = mapped_column(String(1000), default="")
     subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id"))
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     status: Mapped[str] = mapped_column(String(20), default="todo")
     owner: Mapped[User] = relationship(back_populates="tasks")
     subject: Mapped[Subject] = relationship(back_populates="tasks")
