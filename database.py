@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, Table
-from dotenv import load_dotenv
+from sqlalchemy import String, Integer, ForeignKey, Table, Column
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -26,15 +26,15 @@ class Base(DeclarativeBase):
 user_subjects = Table(
     'user_subjects',
     Base.metadata,
-    Mapped.Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
-    Mapped.Column('subject_id', Integer, ForeignKey('subjects.id'), primary_key=True)
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('subject_id', Integer, ForeignKey('subjects.id'), primary_key=True)
 )
 
 user_courses = Table(
     'user_courses',
     Base.metadata,
-    Mapped.Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
-    Mapped.Column('course_id', Integer, ForeignKey('courses.id'), primary_key=True)
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('course_id', Integer, ForeignKey('courses.id'), primary_key=True)
 )
 
 class User(Base):
