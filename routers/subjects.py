@@ -5,10 +5,7 @@ from database import get_session, Subject
 from models import SubjectCreate, SubjectUpdate, SubjectOut, SubjectWithTasksOut
 from typing import List
 
-router = APIRouter(
-    prefix="/subjects",
-    tags=["subjects"],
-)
+router = APIRouter()
 
 @router.post("/", response_model=SubjectOut, status_code=status.HTTP_201_CREATED)
 async def create_subject(subject: SubjectCreate, session: AsyncSession = Depends(get_session)):

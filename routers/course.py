@@ -5,10 +5,7 @@ from database import get_session, Course, Subject
 from models import CourseCreate, CourseUpdate, CourseOut, CourseWithTasksOut
 from typing import List
 
-router = APIRouter(
-    prefix="/courses",
-    tags=["courses"],
-)
+router = APIRouter()
 
 @router.post("/", response_model=CourseOut, status_code=status.HTTP_201_CREATED)
 async def create_course(course: CourseCreate, session: AsyncSession = Depends(get_session)):
